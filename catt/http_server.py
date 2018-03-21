@@ -15,14 +15,13 @@ def serve_file(filename, address="", port=45114):
     class FileHandler(BaseHTTPRequestHandler):
         def do_GET(self):  # noqa
             try:
-                file = open(filename, "rb")
-                stat = os.fstat(file.fileno())
+                mediafile = open(filename, "rb")
+                stat = os.fstat(mediafile.fileno())
                 length = stat.st_size
 
                 self.send_response(200)
                 self.send_header("Content-type", "video/mp4")
                 self.send_header("Content-Length", length)
-                self.send_header("Accept-Ranges", "bytes")
                 self.send_header(
                     "Last-Modified",
                     time.strftime(
@@ -33,7 +32,7 @@ def serve_file(filename, address="", port=45114):
                 self.end_headers()
 
                 while True:
-                    data = file.read(100 * 1024)
+                    data = mediafile.read(100 * 1024)
 
                     if not data:
                         break
@@ -41,7 +40,7 @@ def serve_file(filename, address="", port=45114):
             except:  # noqa
                 traceback.print_exc()
 
-            file.close()
+            mediafile.close()
 
     httpd = SocketServer.TCPServer((address, port), FileHandler)
     httpd.serve_forever()
