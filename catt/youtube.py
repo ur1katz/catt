@@ -18,6 +18,7 @@ YOUTUBE_WATCH_VIDEO_URL = YOUTUBE_BASE_URL + "watch?v="
 # id param is const(YouTube sets it as random xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx so it should be fine).
 RANDOM_ID = "12345678-9ABC-4DEF-0123-0123456789AB"
 VIDEO_ID_PARAM = '%7B%22videoId%22%3A%22{video_id}%22%2C%22currentTime%22%3A5%2C%22currentIndex%22%3A0%7D'
+VIDEO_PLAYLIST_PARAM = '%7B%22videoId%22%3A%22{video_id}%22%2C%22listId%22%3A%22{list_id}%22%2C%22currentIndex%22%3A0%7D&'
 TERMINATE_PARAM = "terminate"
 
 REQUEST_URL_SET_PLAYLIST = YOUTUBE_BASE_URL + "api/lounge/bc/bind?"
@@ -173,19 +174,22 @@ class YouTubeController(BaseController):
             raise YoutubeSessionError("Could not get lounge id. XSRF token has expired or not valid.")
         self._lounge_token = lounge_token
 
-    def _set_playlist(self):
+    def _set_playlist(self, video_id, video_playlist_id=None):
         """
         Sends a POST to start the session.
         Uses loung_token and video id as parameters.
         Sets session SID and gsessionid on success.
         """
-        if not self.video_id:
+        if not video_id:
             raise ValueError("Can't start a session without the video_id.")
         if not self._lounge_token:
             raise ValueError("lounge token is None. _get_lounge_token must be called")
         url_params = REQUEST_PARAMS_SET_PLAYLIST.copy()
         url_params['loungeIdToken'] = self._lounge_token
-        url_params['params'] = VIDEO_ID_PARAM.format(video_id=self.video_id)
+        if video_playlist_id:
+            url_params['params'] = VIDEO_PLAYLIST_PARAM.format(video_id=video_id, list_id=video_playlist_id)
+        else:
+            url_params['params'] = VIDEO_ID_PARAM.format(video_id=video_id)
         response = self._do_post(REQUEST_URL_SET_PLAYLIST, data=REQUEST_DATA_SET_PLAYLIST, params=url_params)
         content = str(response.content)
         if response.status_code == 401 and content.find(EXPIRED_LOUNGE_ID_RESPONSE_CONTENT) != -1:
@@ -319,17 +323,18 @@ class YouTubeController(BaseController):
         self._get_lounge_id()
         self._update_session_parameters()
 
-    def play_video(self, youtube_id):
+    def play_video(self, youtube_id, video_playlist_id=None):
         """
         Starts playing a video in the YouTube app.
         The youtube id is also a session identifier used in all requests for the session.
+        :param video_playlist_id: the Youtube playlist id. None for single video.
         :param youtube_id: The video id to play.
         """
         if not self.in_session:
             self.start_new_session(youtube_id)
         if self._first_video:
             self.clear_playlist()
-        self._set_playlist()
+        self._set_playlist(youtube_id, video_playlist_id)
         self._update_session_parameters()
 
     def add_to_queue(self, youtube_id):

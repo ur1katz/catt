@@ -227,7 +227,7 @@ def cast(settings, video_url, subtitle, force_default, random_play, no_subs):
             try:
                 if not stream.playlist_all_ids:
                     raise ValueError
-                cst.play_playlist(stream.playlist_all_ids)
+                cst.play_playlist(stream.playlist_all_ids, stream.playlist_id)
                 return
             except (PlaybackError, ValueError):
                 warning("Playlist playback not possible, playing first video.")
