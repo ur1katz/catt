@@ -266,7 +266,7 @@ class YouTubeController(BaseController):
             self._do_post(REQUEST_URL_SET_PLAYLIST, referer=referer, data=data, params=url_params)
         except requests.HTTPError:
             # Try to re-get session variables and post again.
-            self._set_playlist()
+            self._set_playlist(self.video_id)
             url_params["loungeIdToken"] = self._lounge_token
             url_params["params"] = VIDEO_ID_PARAM.format(video_id=self._first_video)
             url_params["gsessionid"] = self._gsession_id
