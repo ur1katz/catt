@@ -11,3 +11,4 @@ Contributors
 ------------
 
 * theychx <boomingzooming@gmail.com>
+* Uri Katz <4urikatz@gmail.com>
